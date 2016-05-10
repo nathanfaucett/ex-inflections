@@ -9,23 +9,19 @@ defmodule Inflections do
         end
 
         def get(locale) do
-            Agent.get(__MODULE__, fn(locales) ->
+            locales = Agent.get(__MODULE__, fn(locales) ->
                 if Map.has_key?(locales, locale) do
-                    Map.get(locales, locale)
+                    locales
                 else
-                    inflector = Inflector.new()
-                    Agent.update(__MODULE__, fn(locales) ->
-                        Map.put(locales, locale, inflector)
-                    end)
-                    inflector
+                    Map.put(locales, locale, Inflector.new())
                 end
             end)
+            Map.get(locales, locale)
         end
         def set(locale, inflector) do
-            Agent.update(__MODULE__, fn(locales) ->
-                Map.put(locales, locale, inflector)
+            Agent.get_and_update(__MODULE__, fn(locales) ->
+                {inflector, Map.put(locales, locale, inflector)}
             end)
-            inflector
         end
     end
 
@@ -39,7 +35,7 @@ defmodule Inflections do
             Agent.get(__MODULE__, fn(locale) -> locale end)
         end
         def set(locale) do
-            Agent.update(__MODULE__, fn() -> locale end)
+            Agent.update(__MODULE__, fn(_) -> locale end)
             locale
         end
     end
@@ -54,18 +50,18 @@ defmodule Inflections do
     def default_locale() do
         DefaultLocale.get()
     end
-    def set_default_locale(locale) do
-        DefaultLocale.get(locale)
+    def default_locale(locale) do
+        DefaultLocale.set(locale)
     end
 
     def start(_type, _args) do
-        Supervisor.start_link(__MODULE__, :ok)
+        Supervisor.start_link(__MODULE__, [])
     end
 
-    def init(_) do
+    def init([]) do
         children = [
-            worker(DefaultLocale, [], restart: :temporary),
-            worker(Locales, [], restart: :temporary)
+            worker(DefaultLocale, []),
+            worker(Locales, [])
         ]
         supervise(children, strategy: :one_for_one)
     end
