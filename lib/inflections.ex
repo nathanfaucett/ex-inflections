@@ -1,5 +1,6 @@
 defmodule Inflections do
     use Application
+    use Supervisor
 
     defmodule Locales do
 
@@ -19,9 +20,10 @@ defmodule Inflections do
             end)
         end
         def set(locale, inflector) do
-            Agent.get_and_update(__MODULE__, fn(locales) ->
+            Agent.update(__MODULE__, fn(locales) ->
                 Map.put(locales, locale, inflector)
             end)
+            inflector
         end
     end
 
@@ -36,6 +38,7 @@ defmodule Inflections do
         end
         def set(locale) do
             Agent.update(__MODULE__, fn() -> locale end)
+            locale
         end
     end
 
@@ -54,7 +57,10 @@ defmodule Inflections do
     end
 
     def start(_type, _args) do
-        DefaultLocale.start_link()
-        Locales.start_link()
+        children = [
+            worker(DefaultLocale, []),
+            worker(Locales, [])
+        ]
+        Supervisor.start_link(children, strategy: :one_for_one)
     end
 end
