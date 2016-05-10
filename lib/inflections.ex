@@ -14,7 +14,9 @@ defmodule Inflections do
                     Map.get(locales, locale)
                 else
                     inflector = Inflector.new()
-                    locales = Map.put(locales, locale, inflector)
+                    Agent.update(__MODULE__, fn(locales) ->
+                        Map.put(locales, locale, inflector)
+                    end)
                     inflector
                 end
             end)
@@ -57,10 +59,14 @@ defmodule Inflections do
     end
 
     def start(_type, _args) do
+        Supervisor.start_link(__MODULE__, :ok)
+    end
+
+    def init(_) do
         children = [
-            worker(DefaultLocale, []),
-            worker(Locales, [])
+            worker(DefaultLocale, [], restart: :temporary),
+            worker(Locales, [], restart: :temporary)
         ]
-        Supervisor.start_link(children, strategy: :one_for_one)
+        supervise(children, strategy: :one_for_one)
     end
 end
