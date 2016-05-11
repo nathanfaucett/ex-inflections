@@ -1,1 +1,1 @@
-%{"inflector": {:git, "https://github.com/nathanfaucett/ex-inflector.git", "b72a8f4a2b5708a29f58022c53dbdef15a205bf6", []}}
+%{"inflector": {:hex, :inflector, "0.0.11"}}
