@@ -63,8 +63,8 @@ defmodule Inflections do
 
     def init([]) do
         children = [
-            worker(DefaultLocale, []),
-            worker(Locales, [])
+            worker(DefaultLocale, [], restart: :temporary),
+            worker(Locales, [], restart: :temporary)
         ]
         supervise(children, strategy: :one_for_one)
     end
