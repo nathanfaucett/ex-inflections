@@ -19,9 +19,10 @@ defmodule Inflections do
             Map.get(locales, locale)
         end
         def set(locale, inflector) do
-            Agent.get_and_update(__MODULE__, fn(locales) ->
-                {inflector, Map.put(locales, locale, inflector)}
+            Agent.update(__MODULE__, fn(locales) ->
+                Map.put(locales, locale, inflector)
             end)
+            inflector
         end
     end
 
